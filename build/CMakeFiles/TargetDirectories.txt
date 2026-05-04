@@ -1,3 +1,0 @@
-/home/482746/opengl/build/CMakeFiles/App.dir
-/home/482746/opengl/build/CMakeFiles/edit_cache.dir
-/home/482746/opengl/build/CMakeFiles/rebuild_cache.dir

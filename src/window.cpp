@@ -1,7 +1,45 @@
 #include "./window.h"
 #include "Windows.h"
 #include <iostream>
-#include "stdlib.h"
+#include <atomic>
+
+void handle_errors(std::string msg) {
+	DWORD error = GetLastError();
+	std::cout << msg << ": " << error << std::endl;
+
+	if (error) {
+		ExitProcess(-1);
+	}
+}
+
+LRESULT WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	Window *window = (Window *)GetWindowLongPtrA(hWnd, 0);
+	static PAINTSTRUCT ps;
+
+	switch (uMsg) {
+		case WM_PAINT:
+			{
+				BeginPaint(hWnd, &ps);
+				EndPaint(hWnd, &ps);
+			}
+			return 0;
+		case WM_SIZE:
+			{
+				int width = LOWORD(lParam);
+				int height = HIWORD(lParam);
+				window->resize(width, height);
+			}
+			return 0;
+		case WM_DESTROY:
+			delete window;
+			PostQuitMessage(0);
+			return 0;
+		case WM_ERASEBKGND:
+			return 1;
+		default:
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
+	}
+}
 
 void SetPixelFormat(HWND hWnd) {
 	HDC hdc = GetDC(hWnd);
@@ -29,42 +67,56 @@ void SetPixelFormat(HWND hWnd) {
 
 	if (iPixelFormat == 0) {
 		MessageBox(hWnd, "Error", "Failed to determine Pixel Format", MB_OK);
-		exit(-1);
+		ExitProcess(-1);
 	}
 
 	if (!SetPixelFormat(hdc, iPixelFormat, &pfd)) {
 		MessageBox(hWnd, "Error", "Failed to determine Pixel Format", MB_OK);
-		exit(-1);
+		ExitProcess(-1);
 	}	
 
 	ReleaseDC(hWnd, hdc);
 }
 
-Window::Window(const char *name, HINSTANCE hInstance, int width, int height) : hInstance(hInstance), width(width), height(height), wc({0}) {
+std::atomic<int> classStatus(0);
+WNDCLASSEXA wc = {0};
+
+void setup_class(void) {
+	int old = 0;
+	if (!classStatus.compare_exchange_strong(old, 1)) {
+		while (classStatus != 2) {}
+		return;
+	}
+
 	wc.lpfnWndProc = WindowProc;
-	wc.hInstance = hInstance;
-	wc.lpszClassName = name;
+	wc.hInstance = get_instance();
+	wc.lpszClassName = "StandardClass";
 	wc.cbSize = sizeof(WNDCLASSEXA);
 	wc.cbWndExtra = sizeof(Window *);
-
 	RegisterClassEx(&wc);
-	std::cout << "Registered Class: " << GetLastError() << std::endl;
+	handle_errors("Registered Class");
+
+	classStatus = 2;
+}
+
+Window::Window(const char *name, int width, int height) : width(width), height(height) {
+	setup_class();
 
 	hWnd = CreateWindowExA(
-			WS_EX_TOPMOST,
+			0,
 			wc.lpszClassName,
 			name,
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT, CW_USEDEFAULT, width, height,
 			NULL,
 			NULL,
-			hInstance,
+			get_instance(),
 			NULL
 			);
-	std::cout << "Created Window: " << GetLastError() << std::endl;
+	handle_errors("Created Window");
 
 	if (hWnd == NULL) {
-		exit(-1);
+		ExitProcess(-1);
 	}
 
 	SetPixelFormat(hWnd);
@@ -104,10 +156,6 @@ void Window::dispatch_event(int event, void *data) {
 	}
 }
 
-HINSTANCE Window::get_hinstance(void) {
-	return hInstance;
-}
-
 HWND Window::get_hwnd(void) {
 	return hWnd;
 }
@@ -119,34 +167,5 @@ HDC Window::get_hdc(void) {
 void Window::resize(int _width, int _height) {
 	width = _width;
 	height = _height;
-}
-
-LRESULT WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-	Window *window = (Window *)GetWindowLongPtrA(hWnd, 0);
-	static PAINTSTRUCT ps;
-
-	switch (uMsg) {
-		case WM_PAINT:
-			{
-				BeginPaint(hWnd, &ps);
-				EndPaint(hWnd, &ps);
-			}
-			return 0;
-		case WM_SIZE:
-			{
-				int width = LOWORD(lParam);
-				int height = HIWORD(lParam);
-				window->resize(width, height);
-			}
-			return 0;
-		case WM_DESTROY:
-			delete window;
-			PostQuitMessage(0);
-			return 0;
-		case WM_ERASEBKGND:
-			return 1;
-		default:
-			return DefWindowProc(hWnd, uMsg, wParam, lParam);
-	}
 }
 

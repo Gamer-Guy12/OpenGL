@@ -1,9 +1,17 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include "./window.h"
 #include "stdlib.h"
 #include "./common.h"
+#include "./shader.h"
 
 static HMODULE libGL;
+HINSTANCE instance;
+
+HINSTANCE get_instance() {
+	return instance;
+}
 
 void* custom_gl_loader(const char* name) {
     // Try the extension loader first (for 1.2+ functions)
@@ -22,9 +30,25 @@ void* custom_gl_loader(const char* name) {
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
-	Window *window = new Window("My Window", hInstance, 1280, 720);
+	instance = hInstance;
+	Window *window = new Window("My Window", 1280, 720);
 	window->show();
 	std::cout << "Showed Window: " << GetLastError() << std::endl;
+
+	std::string vertPath = "assets/shader.vert";
+	std::string fragPath = "assets/shader.frag";
+
+	std::ifstream vertFile(vertPath);
+	std::ifstream fragFile(fragPath);
+	if (!vertFile.is_open() || ! fragFile.is_open()) {
+		std::cout << "Failed to open shader files\n";
+		ExitProcess(-1);
+	}
+
+	std::stringstream vertBuffer;
+	std::stringstream fragBuffer;
+	vertBuffer << vertFile.rdbuf();
+	fragBuffer << fragFile.rdbuf();
 	
 	libGL = LoadLibraryA("opengl32.dll");
 	if (!libGL) {
@@ -49,7 +73,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 	}
 
 	int attribs[] = {
-		WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+		WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
 		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
 		GL_CONTEXT_PROFILE_MASK,  GL_CONTEXT_CORE_PROFILE_BIT,
 		0
@@ -61,6 +85,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 	wglDeleteContext(hrc1);
 	wglMakeCurrent(hdc, hrc);
 	wglMakeCurrent(nullptr, nullptr);
+	
+	Shader *shader = new Shader(vertBuffer.str(), fragBuffer.str());
+	shader->use();
 
 	while (window->running()) {
 		window->process();

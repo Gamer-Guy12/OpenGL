@@ -9,7 +9,7 @@
 
 class Window {
 	public:
-		Window(const char *name, HINSTANCE hInstance, int width, int height);
+		Window(const char *name, int width, int height);
 		~Window();
 
 		void show(void);
@@ -28,10 +28,8 @@ class Window {
 		std::vector<std::function<void(int event, void *data)>> handlers;
 		bool is_running;
 
-		HINSTANCE hInstance;
 		HWND hWnd;
 		HDC hdc;
-		WNDCLASSEXA wc;
 
 		void dispatch_event(int event, void *data);
 };

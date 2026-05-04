@@ -1,6 +1,8 @@
 #pragma once
 
-#include "common.h"
+#include "./common.h"
+#include "./window.h"
+#include "./shader.h"
 #include <vector>
 
 struct Vertex {
@@ -10,11 +12,9 @@ struct Vertex {
 
 class Renderer {
 	public:
-		Renderer(HWND hWnd, HDC hdc, HGLRC hrc);
+		Renderer(Window &window, Shader &shader);
 		~Renderer();
 
-		void set_shader(const char *vertex, const char *fragment);
-		void use_default_shader(void);
 		void upload_vertices(std::vector<Vertex> &vertices);
 		void upload_indices(std::vector<int> &indices);
 
