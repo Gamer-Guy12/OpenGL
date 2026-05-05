@@ -121,7 +121,6 @@ bool Renderer::running() {
 // Used to handle window closing
 void Renderer::handle_life() {
     if (state != 1) return;
-    std::cout << resize_handler << " " << close_handler << std::endl;
 
     window->unsubscribe_events(resize_handler);
     window->unsubscribe_events(close_handler);
