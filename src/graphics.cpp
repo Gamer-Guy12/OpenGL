@@ -1,4 +1,5 @@
 #include <iostream>
+#include <chrono>
 #include <fstream>
 #include <sstream>
 #include "./window.h"
@@ -55,9 +56,21 @@ void render_thread() {
 	Shader *shader = new Shader(vertBuffer.str(), fragBuffer.str());
 	renderer->use_shader(shader);
 
+	auto start = std::chrono::steady_clock::now();
+	auto second_start = std::chrono::steady_clock::now();
+
 	while (renderer->running()) {
 		renderer->draw();
 		renderer->handle_life();
+		auto current = std::chrono::steady_clock::now();
+		auto diff = current - start;
+		auto second_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - second_start);
+		if (second_ms.count() >= 1000) {
+			second_start = std::chrono::steady_clock::now();
+			auto ms = std::chrono::duration_cast<std::chrono::microseconds>(diff);
+			std::cout << 1000000 / ms.count() << " fps\n";
+		}
+		start = current;
 	}
 
 	delete renderer;

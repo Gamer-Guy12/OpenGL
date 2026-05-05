@@ -47,6 +47,8 @@ static void handle_libgl() {
     }
 }
 
+typedef void (*PFNGLSWAPINTERVALEXTPROC)(int interval);
+
 Renderer::Renderer(Window *window) : hWnd(window->get_hwnd()), hdc(window->get_hdc()), window(window)
 {
     handle_libgl();
@@ -81,6 +83,9 @@ Renderer::Renderer(Window *window) : hWnd(window->get_hwnd()), hdc(window->get_h
     wglMakeCurrent(hdc, hrc);
     wglDeleteContext(hrc1);
     glViewport(0, 0, window->get_width(), window->get_height());
+    PFNGLSWAPINTERVALEXTPROC glSwapIntervalEXT = ((PFNGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT"));
+    // Handle Swaps
+    glSwapIntervalEXT(0);
 
     resize_handler = window->subscribe_events(handle_resize, this);
     close_handler = window->subscribe_events(handle_destroy, this);
