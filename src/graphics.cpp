@@ -84,7 +84,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 	std::cout << "Created Context: " << GetLastError() << std::endl;
 	wglDeleteContext(hrc1);
 	wglMakeCurrent(hdc, hrc);
-	wglMakeCurrent(nullptr, nullptr);
 	
 	Shader *shader = new Shader(vertBuffer.str(), fragBuffer.str());
 	shader->use();
@@ -93,6 +92,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 		window->process();
 	}
 	
+	wglMakeCurrent(nullptr, nullptr);
 	wglDeleteContext(hrc);
 	delete window;
 
