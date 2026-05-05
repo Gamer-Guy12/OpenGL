@@ -33,8 +33,7 @@ LRESULT WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 			}
 			return 0;
 		case WM_DESTROY:
-			delete window;
-			PostQuitMessage(0);
+			window->destroy();
 			return 0;
 		case WM_ERASEBKGND:
 			return 1;
@@ -134,6 +133,7 @@ Window::~Window() {
 
 void Window::show(void) {
 	ShowWindow(hWnd, SW_SHOW);
+	handle_errors("Showed Window");
 }
 
 void Window::process(void) {
@@ -148,18 +148,26 @@ bool Window::running(void) {
 	return is_running;
 }
 
-int Window::subscribe_events(std::function<void(int event, void *data)> handler) {
+void Window::destroy(void) {
+	dispatch_event(WCLOSE, this);
+	is_running = false;
+	PostQuitMessage(0);
+}
+
+int Window::subscribe_events(std::function<void(int event, void *data, void *param)> handler, void *param) {
 	handlers.push_back(handler);
+	params.push_back(param);
 	return handlers.size() - 1;
 }
 
 void Window::unsubscribe_events(int handler) {
-	handlers.erase(handlers.begin() + handler);
+	handlers[handler] = nullptr;
 }
 
 void Window::dispatch_event(int event, void *data) {
-	for (auto handler : handlers) {
-		handler(event, data);
+	for (int i = 0; i < handlers.size(); i++) {
+		if (!handlers[i]) continue;
+		handlers[i](event, data, params[i]);
 	}
 }
 
@@ -174,6 +182,8 @@ HDC Window::get_hdc(void) {
 void Window::resize(int _width, int _height) {
 	width = _width;
 	height = _height;
+
+	dispatch_event(WRESIZE, this);
 }
 
 int Window::get_width(void) {

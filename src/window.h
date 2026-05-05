@@ -16,7 +16,8 @@ class Window {
 		void process(void);
 		bool running(void);
 		void resize(int width, int height);
-		int subscribe_events(std::function<void(int event, void *data)>);
+		void destroy(void);
+		int subscribe_events(std::function<void(int event, void *data, void *param)>, void *param);
 		void unsubscribe_events(int handler);
 
 		HWND get_hwnd(void);
@@ -28,7 +29,8 @@ class Window {
 	private:
 		int width;
 		int height;
-		std::vector<std::function<void(int event, void *data)>> handlers;
+		std::vector<std::function<void(int event, void *data, void *param)>> handlers;
+		std::vector<void *> params;
 		bool is_running;
 
 		HWND hWnd;

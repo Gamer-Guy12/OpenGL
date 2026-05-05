@@ -33,7 +33,6 @@ static void* custom_gl_loader(const char* name) {
 }
 
 Window *window;
-Renderer *renderer;
 
 void render_thread() {
 	std::string vertPath = "assets/shader.vert";
@@ -52,13 +51,16 @@ void render_thread() {
 	vertBuffer << vertFile.rdbuf();
 	fragBuffer << fragFile.rdbuf();
 
-	renderer = new Renderer(window);
+	Renderer *renderer = new Renderer(window);
 	Shader *shader = new Shader(vertBuffer.str(), fragBuffer.str());
 	renderer->use_shader(shader);
 
-	while (window->running()) {
+	while (renderer->running()) {
 		renderer->draw();
+		renderer->handle_life();
 	}
+
+	delete renderer;
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
@@ -69,18 +71,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 	freopen("CONIN$", "r", stdin);
 
 	instance = hInstance;
+
 	window = new Window("My Window", 1280, 720);
 	window->show();
-	std::cout << "Showed Window: " << GetLastError() << std::endl;
 
 	std::thread render(render_thread);
 
-	while (window->running()) {
-		window->process();
-	}
-	
-	delete renderer;
+	window->process();
+
+	render.join();
 	delete window;
+
+	FreeConsole();
 
 	return 0;
 }

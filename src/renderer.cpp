@@ -81,8 +81,12 @@ Renderer::Renderer(Window *window) : hWnd(window->get_hwnd()), hdc(window->get_h
     wglMakeCurrent(hdc, hrc);
     wglDeleteContext(hrc1);
     glViewport(0, 0, window->get_width(), window->get_height());
+
+    resize_handler = window->subscribe_events(handle_resize, this);
+    close_handler = window->subscribe_events(handle_destroy, this);
 }
 
+// Used to delete final things
 Renderer::~Renderer()
 {
 	wglMakeCurrent(nullptr, nullptr);
@@ -94,8 +98,52 @@ void Renderer::use_shader(Shader *shader) {
 }
 
 void Renderer::draw() {
+    if (state != 0) return;
+
+    if (resize) {
+        resize = false;
+        glViewport(0, 0, newWidth, newHeight);
+        std::cout << "Resize: " << newWidth << ", " << newHeight << std::endl;
+    }
+
+    shader->use();
+
     glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(0.7f, 0.6f, 0.5f, 1.0f);
 
     SwapBuffers(hdc);
+}
+
+bool Renderer::running() {
+    return state != 2;
+}
+
+// Used to handle window closing
+void Renderer::handle_life() {
+    if (state != 1) return;
+    std::cout << resize_handler << " " << close_handler << std::endl;
+
+    window->unsubscribe_events(resize_handler);
+    window->unsubscribe_events(close_handler);
+    state = 2;
+}
+
+void handle_resize(int event, void *data, void *param) {
+    if (event != WRESIZE) return;
+
+    Renderer *renderer = (Renderer *)param;
+    Window *window = (Window *)data;
+
+    renderer->resize = true;
+    renderer->newWidth = window->get_width();
+    renderer->newHeight = window->get_height();
+}
+
+void handle_destroy(int event, void *data, void *param) {
+    if (event != WCLOSE) return;
+
+    Renderer *renderer = (Renderer *)param;
+    Window *window = (Window *)data;
+
+    renderer->state = 1;
 }
