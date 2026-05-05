@@ -2,12 +2,14 @@
 #include "Windows.h"
 #include <iostream>
 #include <atomic>
+#include <algorithm>
 
-void handle_errors(std::string msg) {
+static void handle_errors(std::string msg) {
 	DWORD error = GetLastError();
 	std::cout << msg << ": " << error << std::endl;
 
 	if (error) {
+		system("pause");
 		ExitProcess(-1);
 	}
 }
@@ -66,19 +68,19 @@ void SetPixelFormat(HWND hWnd) {
 	int iPixelFormat = ChoosePixelFormat(hdc, &pfd);
 
 	if (iPixelFormat == 0) {
-		MessageBox(hWnd, "Error", "Failed to determine Pixel Format", MB_OK);
+		std::cout << "Failed to determine Pixel Format\n";
 		ExitProcess(-1);
 	}
 
 	if (!SetPixelFormat(hdc, iPixelFormat, &pfd)) {
-		MessageBox(hWnd, "Error", "Failed to determine Pixel Format", MB_OK);
+		std::cout << "Failed to determine Pixel Format\n";
 		ExitProcess(-1);
 	}	
 
 	ReleaseDC(hWnd, hdc);
 }
 
-std::atomic<int> classStatus(0);
+static std::atomic<int> classStatus(0);
 WNDCLASSEXA wc = {0};
 
 void setup_class(void) {
@@ -93,7 +95,7 @@ void setup_class(void) {
 	wc.lpszClassName = "StandardClass";
 	wc.cbSize = sizeof(WNDCLASSEXA);
 	wc.cbWndExtra = sizeof(Window *);
-	RegisterClassEx(&wc);
+	RegisterClassExA(&wc);
 	handle_errors("Registered Class");
 
 	classStatus = 2;
@@ -146,8 +148,13 @@ bool Window::running(void) {
 	return is_running;
 }
 
-void Window::subscribe_events(std::function<void(int event, void *data)> handler) {
+int Window::subscribe_events(std::function<void(int event, void *data)> handler) {
 	handlers.push_back(handler);
+	return handlers.size() - 1;
+}
+
+void Window::unsubscribe_events(int handler) {
+	handlers.erase(handlers.begin() + handler);
 }
 
 void Window::dispatch_event(int event, void *data) {
@@ -169,3 +176,10 @@ void Window::resize(int _width, int _height) {
 	height = _height;
 }
 
+int Window::get_width(void) {
+	return width;
+}
+
+int Window::get_height(void) {
+	return height;
+}

@@ -12,9 +12,10 @@ struct Vertex {
 
 class Renderer {
 	public:
-		Renderer(Window &window, Shader &shader);
+		Renderer(Window *window);
 		~Renderer();
 
+		void use_shader(Shader *shader);
 		void upload_vertices(std::vector<Vertex> &vertices);
 		void upload_indices(std::vector<int> &indices);
 
@@ -27,5 +28,8 @@ class Renderer {
 
 		std::vector<Vertex> vertices;
 		std::vector<int> indices;
+
+		Window *window;
+		Shader *shader = nullptr;
 };
 

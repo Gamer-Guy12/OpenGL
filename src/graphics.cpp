@@ -2,9 +2,12 @@
 #include <fstream>
 #include <sstream>
 #include "./window.h"
-#include "stdlib.h"
+#include <stdlib.h>
+#include <stdio.h>
 #include "./common.h"
 #include "./shader.h"
+#include "./renderer.h"
+#include <thread>
 
 static HMODULE libGL;
 HINSTANCE instance;
@@ -13,7 +16,7 @@ HINSTANCE get_instance() {
 	return instance;
 }
 
-void* custom_gl_loader(const char* name) {
+static void* custom_gl_loader(const char* name) {
     // Try the extension loader first (for 1.2+ functions)
     void* p = (void*)wglGetProcAddress(name);
     
@@ -29,12 +32,10 @@ void* custom_gl_loader(const char* name) {
     return p;
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
-	instance = hInstance;
-	Window *window = new Window("My Window", 1280, 720);
-	window->show();
-	std::cout << "Showed Window: " << GetLastError() << std::endl;
+Window *window;
+Renderer *renderer;
 
+void render_thread() {
 	std::string vertPath = "assets/shader.vert";
 	std::string fragPath = "assets/shader.frag";
 
@@ -42,6 +43,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 	std::ifstream fragFile(fragPath);
 	if (!vertFile.is_open() || ! fragFile.is_open()) {
 		std::cout << "Failed to open shader files\n";
+		system("pause");
 		ExitProcess(-1);
 	}
 
@@ -49,51 +51,35 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 	std::stringstream fragBuffer;
 	vertBuffer << vertFile.rdbuf();
 	fragBuffer << fragFile.rdbuf();
-	
-	libGL = LoadLibraryA("opengl32.dll");
-	if (!libGL) {
-		std::cout << "Failed to load OpenGL Library\n";
-	}
 
-	HDC hdc = window->get_hdc();	
-	HGLRC hrc1 = wglCreateContext(hdc);
-	wglMakeCurrent(hdc, hrc1);
-	std::cout << "Made First Context: " << GetLastError() << std::endl;
-
-	if (!gladLoadGL((GLADloadfunc)custom_gl_loader)) {
-		std::cout << "Failed to init GLAD: " << GetLastError() << std::endl;
-		return -1;
-	}
-
-	const char *version = (const char*)glGetString(GL_VERSION);
-	if (version) {
-		std::cout << "Hardware supports: " << version << std::endl;
-	} else {
-		std::cout << "Error Checking Version: " << version << std::endl;
-	}
-
-	int attribs[] = {
-		WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-		GL_CONTEXT_PROFILE_MASK,  GL_CONTEXT_CORE_PROFILE_BIT,
-		0
-	};
-
-
-	HGLRC hrc = ((PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB"))(hdc, 0, attribs);
-	std::cout << "Created Context: " << GetLastError() << std::endl;
-	wglDeleteContext(hrc1);
-	wglMakeCurrent(hdc, hrc);
-	
+	renderer = new Renderer(window);
 	Shader *shader = new Shader(vertBuffer.str(), fragBuffer.str());
-	shader->use();
+	renderer->use_shader(shader);
+
+	while (window->running()) {
+		renderer->draw();
+	}
+}
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
+	AllocConsole();
+
+	freopen("CONOUT$", "w", stdout);
+	freopen("CONOUT$", "w", stderr);
+	freopen("CONIN$", "r", stdin);
+
+	instance = hInstance;
+	window = new Window("My Window", 1280, 720);
+	window->show();
+	std::cout << "Showed Window: " << GetLastError() << std::endl;
+
+	std::thread render(render_thread);
 
 	while (window->running()) {
 		window->process();
 	}
 	
-	wglMakeCurrent(nullptr, nullptr);
-	wglDeleteContext(hrc);
+	delete renderer;
 	delete window;
 
 	return 0;

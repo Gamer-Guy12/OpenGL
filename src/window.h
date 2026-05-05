@@ -16,11 +16,14 @@ class Window {
 		void process(void);
 		bool running(void);
 		void resize(int width, int height);
-		void subscribe_events(std::function<void(int event, void *data)>);
+		int subscribe_events(std::function<void(int event, void *data)>);
+		void unsubscribe_events(int handler);
 
-		HINSTANCE get_hinstance(void);
 		HWND get_hwnd(void);
 		HDC get_hdc(void);
+
+		int get_width(void);
+		int get_height(void);
 
 	private:
 		int width;

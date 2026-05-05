@@ -2,6 +2,16 @@
 #include <exception>
 #include <iostream>
 
+static void handle_errors(std::string msg) {
+	DWORD error = GetLastError();
+	std::cout << msg << ": " << error << std::endl;
+
+	if (error) {
+		system("pause");
+		ExitProcess(-1);
+	}
+}
+
 Shader::Shader(std::string vert, std::string frag) {
 	unsigned int vertHandle;
 	unsigned int fragHandle;
@@ -17,6 +27,7 @@ Shader::Shader(std::string vert, std::string frag) {
 	if (!success) {
 		glGetShaderInfoLog(vertHandle, 512, NULL, infoLog);
 		std::cout << "Error Log: \n" << infoLog << std::endl;
+		system("pause");
  		throw std::runtime_error("Failed to compile vertex shader");
 	}
 
@@ -27,6 +38,7 @@ Shader::Shader(std::string vert, std::string frag) {
 	if (!success) {
 		glGetShaderInfoLog(fragHandle, 512, NULL, infoLog);
 		std::cout << "Error Log: \n" << infoLog << std::endl;
+		system("pause");
  		throw std::runtime_error("Failed to compile fragment shader");
 	}
 	
@@ -38,11 +50,14 @@ Shader::Shader(std::string vert, std::string frag) {
 	if (!success) {
 		glGetProgramInfoLog(handle, 512, NULL, infoLog);
 		std::cout << "Error Log: \n" << infoLog << std::endl;
+		system("pause");
 		throw std::runtime_error("failed to link program");
 	}
 
 	glDeleteShader(vertHandle);
 	glDeleteShader(fragHandle);
+
+	std::cout << "Successfully created shader, handle: " << handle << std::endl;
 }
 
 Shader::~Shader() {
