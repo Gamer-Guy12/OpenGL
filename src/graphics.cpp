@@ -63,22 +63,42 @@ void render_thread() {
 	auto second_start = std::chrono::steady_clock::now();
 
 	vertices.push_back({
-		-0.5f, -0.5f, 0.0f,
+		-0.1f, -0.5f, 0.0f,
 		1.0f, 0.0f, 0.0f
 	});
 
 	vertices.push_back({
-		0.5f, -0.5f, 0.0f,
+		0.1f, -0.5f, 0.0f,
 		0.0f, 1.0f, 0.0f
 	});
 
 	vertices.push_back({
-		-0.5f, 0.5f, 0.0f,
+		-0.1f, -0.25f, 0.0f,
 		0.0f, 0.0f, 1.0f
 	});
 
 	vertices.push_back({
-		0.5f, 0.5f, 0.0f,
+		0.1f, -0.25f, 0.0f,
+		1.0f, 1.0f, 1.0f
+	});
+
+	vertices.push_back({
+		-0.05f, -0.25f, 0.0f,
+		1.0f, 0.0f, 0.0f
+	});
+
+	vertices.push_back({
+		0.05f, -0.25f, 0.0f,
+		0.0f, 1.0f, 0.0f
+	});
+
+	vertices.push_back({
+		-0.05f, 0.5f, 0.0f,
+		0.0f, 0.0f, 1.0f
+	});
+
+	vertices.push_back({
+		0.05f, 0.5f, 0.0f,
 		1.0f, 1.0f, 1.0f
 	});
 
@@ -89,6 +109,14 @@ void render_thread() {
 	indices.push_back(1);
 	indices.push_back(3);
 	indices.push_back(2);
+
+	indices.push_back(4);
+	indices.push_back(5);
+	indices.push_back(6);
+
+	indices.push_back(5);
+	indices.push_back(7);
+	indices.push_back(6);
 
 	renderer->upload_vertices(vertices);
 	renderer->upload_indices(indices);
