@@ -13,34 +13,28 @@
 static HMODULE libGL;
 HINSTANCE instance;
 
-HINSTANCE get_instance() {
-	return instance;
-}
-
-static void* custom_gl_loader(const char* name) {
-    // Try the extension loader first (for 1.2+ functions)
-    void* p = (void*)wglGetProcAddress(name);
-    
-    // Check if wglGetProcAddress failed
-    // Windows returns NULL, 0x1, 0x2, 0x3, or -1 on failure
-    if (p == NULL || (p == (void*)0x1) || (p == (void*)0x2) || (p == (void*)0x3) || (p == (void*)-1)) {
-        // Fallback to the module's export table (for 1.0 and 1.1 functions)
-        p = (void*)GetProcAddress(libGL, name);
-    }
-    
-    if (p)
-	    SetLastError(0);
-    return p;
-}
-
 Window *window;
 
 std::vector<Vertex> vertices;
 std::vector<unsigned int> indices;
 
+HINSTANCE get_instance() {
+	return instance;
+}
+
+std::string get_relative_path(std::string path) {
+	char current_file[128];
+	GetModuleFileNameA(nullptr, current_file, 128);
+	std::string current_file_s = current_file;
+	const size_t last_slash_pos = current_file_s.rfind('\\');
+	std::string dir_name = current_file_s.substr(0, last_slash_pos);
+
+	return dir_name + path;
+}
+
 void render_thread() {
-	std::string vertPath = "assets/shader.vert";
-	std::string fragPath = "assets/shader.frag";
+	std::string vertPath = get_relative_path("/assets/shader.vert");
+	std::string fragPath = get_relative_path("/assets/shader.frag");
 
 	std::ifstream vertFile(vertPath);
 	std::ifstream fragFile(fragPath);
