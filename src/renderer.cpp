@@ -89,6 +89,24 @@ Renderer::Renderer(Window *window) : hWnd(window->get_hwnd()), hdc(window->get_h
 
     resize_handler = window->subscribe_events(handle_resize, this);
     close_handler = window->subscribe_events(handle_destroy, this);
+
+    clear_data();
+
+    // Create buffer objects
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &ebo);
+    glGenVertexArrays(1, &vao);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+    // Position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
+    glEnableVertexAttribArray(0);
+    // Color
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(sizeof(float) * 3));
+    glEnableVertexAttribArray(1);
 }
 
 // Used to delete final things
@@ -100,6 +118,19 @@ Renderer::~Renderer()
 
 void Renderer::use_shader(Shader *shader) {
     this->shader = shader;
+}
+
+void Renderer::draw_triangles() {
+    glBindVertexArray(vao);
+
+    if (reload) {
+        reload = false;
+
+        glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), vertices.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), indices.data(), GL_DYNAMIC_DRAW);
+    }
+
+    glDrawArrays(GL_TRIANGLES, 0, indices.size());
 }
 
 void Renderer::draw() {
@@ -114,7 +145,11 @@ void Renderer::draw() {
     shader->use();
 
     glClear(GL_COLOR_BUFFER_BIT);
-    glClearColor(0.7f, 0.6f, 0.5f, 1.0f);
+    glClearColor(br, bg, bb, 1.0f);
+
+    if (indices.size() > 0 || reload) {
+        draw_triangles();
+    }
 
     SwapBuffers(hdc);
 }
@@ -150,4 +185,25 @@ void handle_destroy(int event, void *data, void *param) {
     Window *window = (Window *)data;
 
     renderer->state = 1;
+}
+
+void Renderer::clear_data() {
+    vertices.clear();
+    indices.clear();
+}
+
+void Renderer::upload_vertices(std::vector<Vertex> &vertices) {
+    this->vertices.insert(this->vertices.end(), vertices.begin(), vertices.end());
+    reload = true;
+}
+
+void Renderer::upload_indices(std::vector<unsigned int> &indices) {
+    this->indices.insert(this->indices.end(), indices.begin(), indices.end());
+    reload = true;
+}
+
+void Renderer::set_background(float r, float g, float b) {
+    br = r;
+    bg = g;
+    bb = b;
 }

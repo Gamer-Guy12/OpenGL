@@ -35,6 +35,9 @@ static void* custom_gl_loader(const char* name) {
 
 Window *window;
 
+std::vector<Vertex> vertices;
+std::vector<unsigned int> indices;
+
 void render_thread() {
 	std::string vertPath = "assets/shader.vert";
 	std::string fragPath = "assets/shader.frag";
@@ -58,6 +61,28 @@ void render_thread() {
 
 	auto start = std::chrono::steady_clock::now();
 	auto second_start = std::chrono::steady_clock::now();
+
+	vertices.push_back({
+		-0.5f, -0.5f, 0.0f,
+		1.0f, 0.0f, 0.0f
+	});
+
+	vertices.push_back({
+		0.5f, -0.5f, 0.0f,
+		0.0f, 1.0f, 0.0f
+	});
+
+	vertices.push_back({
+		0.0f, 0.5f, 0.0f,
+		0.0f, 0.0f, 1.0f
+	});
+
+	indices.push_back(0);
+	indices.push_back(1);
+	indices.push_back(2);
+
+	renderer->upload_vertices(vertices);
+	renderer->upload_indices(indices);
 
 	while (renderer->running()) {
 		renderer->draw();
