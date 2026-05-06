@@ -82,26 +82,6 @@ void render_thread() {
 		1.0f, 1.0f, 1.0f
 	});
 
-	vertices.push_back({
-		-0.05f, -0.25f, 0.0f,
-		1.0f, 0.0f, 0.0f
-	});
-
-	vertices.push_back({
-		0.05f, -0.25f, 0.0f,
-		0.0f, 1.0f, 0.0f
-	});
-
-	vertices.push_back({
-		-0.05f, 0.5f, 0.0f,
-		0.0f, 0.0f, 1.0f
-	});
-
-	vertices.push_back({
-		0.05f, 0.5f, 0.0f,
-		1.0f, 1.0f, 1.0f
-	});
-
 	indices.push_back(0);
 	indices.push_back(1);
 	indices.push_back(2);
@@ -110,16 +90,9 @@ void render_thread() {
 	indices.push_back(3);
 	indices.push_back(2);
 
-	indices.push_back(4);
-	indices.push_back(5);
-	indices.push_back(6);
-
-	indices.push_back(5);
-	indices.push_back(7);
-	indices.push_back(6);
-
 	renderer->upload_vertices(vertices);
 	renderer->upload_indices(indices);
+	int count = 0;
 
 	while (renderer->running()) {
 		renderer->draw();
@@ -131,6 +104,31 @@ void render_thread() {
 			second_start = std::chrono::steady_clock::now();
 			auto ms = std::chrono::duration_cast<std::chrono::microseconds>(diff);
 			std::cout << 1000000 / ms.count() << " fps\n";
+			count++;
+			if (count == 1) {
+				vertices.push_back({-0.05f, -0.25f, 0.0f,
+									1.0f, 0.0f, 0.0f});
+
+				vertices.push_back({0.05f, -0.25f, 0.0f,
+									0.0f, 1.0f, 0.0f});
+
+				vertices.push_back({-0.05f, 0.5f, 0.0f,
+									0.0f, 0.0f, 1.0f});
+
+				vertices.push_back({0.05f, 0.5f, 0.0f,
+									1.0f, 1.0f, 1.0f});
+				indices.push_back(4);
+				indices.push_back(5);
+				indices.push_back(6);
+
+				indices.push_back(5);
+				indices.push_back(7);
+				indices.push_back(6);
+
+				renderer->clear_data();
+				renderer->upload_vertices(vertices);
+				renderer->upload_indices(indices);
+			}
 		}
 		start = current;
 	}
