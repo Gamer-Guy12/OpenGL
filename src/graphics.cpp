@@ -73,12 +73,21 @@ void render_thread() {
 	});
 
 	vertices.push_back({
-		0.0f, 0.5f, 0.0f,
+		-0.5f, 0.5f, 0.0f,
 		0.0f, 0.0f, 1.0f
+	});
+
+	vertices.push_back({
+		0.5f, 0.5f, 0.0f,
+		1.0f, 1.0f, 1.0f
 	});
 
 	indices.push_back(0);
 	indices.push_back(1);
+	indices.push_back(2);
+
+	indices.push_back(1);
+	indices.push_back(3);
 	indices.push_back(2);
 
 	renderer->upload_vertices(vertices);

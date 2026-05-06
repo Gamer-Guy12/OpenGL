@@ -130,7 +130,7 @@ void Renderer::draw_triangles() {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), indices.data(), GL_DYNAMIC_DRAW);
     }
 
-    glDrawArrays(GL_TRIANGLES, 0, indices.size());
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void *)0);
 }
 
 void Renderer::draw() {
