@@ -71,3 +71,34 @@ void Shader::use(void) {
 unsigned int Shader::get_handle(void) {
 	return handle;
 }
+
+void Shader::setInt(std::string name, int value)
+{
+	int loc = glGetUniformLocation(handle, name.c_str());
+	glUniform1i(loc, value);
+}
+
+void Shader::setUint(std::string name, unsigned int value) {
+	int loc = glGetUniformLocation(handle, name.c_str());
+	glUniform1ui(loc, value);
+}
+
+void Shader::setFloat(std::string name, float value) {
+	int loc = glGetUniformLocation(handle, name.c_str());
+	glUniform1f(loc, value);
+}
+
+void Shader::setVec2(std::string name, float value0, float value1) {
+	int loc = glGetUniformLocation(handle, name.c_str());
+	glUniform2f(loc, value0, value1);
+}
+
+void Shader::setVec3(std::string name, float value0, float value1, float value2) {
+	int loc = glGetUniformLocation(handle, name.c_str());
+	glUniform3f(loc, value0, value1, value2);
+}
+
+void Shader::setVec4(std::string name, float value0, float value1, float value2, float value3) {
+	int loc = glGetUniformLocation(handle, name.c_str());
+	glUniform4f(loc, value0, value1, value2, value3);
+}

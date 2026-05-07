@@ -51,6 +51,7 @@ void render_thread() {
 
 	Renderer *renderer = new Renderer(window);
 	Shader *shader = new Shader(vertBuffer.str(), fragBuffer.str());
+
 	renderer->use_shader(shader);
 
 	auto start = std::chrono::steady_clock::now();
@@ -89,8 +90,6 @@ void render_thread() {
 	int count = 0;
 
 	while (renderer->running()) {
-		renderer->draw();
-		renderer->handle_life();
 		auto current = std::chrono::steady_clock::now();
 		auto diff = current - start;
 		auto second_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - second_start);
@@ -125,6 +124,8 @@ void render_thread() {
 			}
 		}
 		start = current;
+		renderer->draw();
+		renderer->handle_life();
 	}
 
 	delete renderer;
