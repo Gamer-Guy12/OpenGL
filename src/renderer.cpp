@@ -2,6 +2,9 @@
 #include <iostream>
 #include <atomic>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 static HMODULE libGL;
 
 static void handle_errors(std::string msg) {
@@ -102,16 +105,28 @@ Renderer::Renderer(Window *window) : hWnd(window->get_hwnd()), hdc(window->get_h
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
     // Position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, x));
     glEnableVertexAttribArray(0);
     // Color
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(sizeof(float) * 3));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(offsetof(Vertex, r)));
     glEnableVertexAttribArray(1);
+    // Texture Coord
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(offsetof(Vertex, texX)));
+    glEnableVertexAttribArray(2);
+
+    stbi_set_flip_vertically_on_load(true);
 }
 
 // Used to delete final things
 Renderer::~Renderer()
 {
+    if (textures.size() > 0)
+        glDeleteTextures(textures.size(), textures.data());
+
+    glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &ebo);
+    glDeleteVertexArrays(1, &vao);
+
 	wglMakeCurrent(nullptr, nullptr);
 	wglDeleteContext(hrc);
 }
@@ -206,4 +221,42 @@ void Renderer::set_background(float r, float g, float b) {
     br = r;
     bg = g;
     bb = b;
+}
+
+glHandle Renderer::load_texture(std::string path) {
+    glHandle handle;
+    glGenTextures(1, &handle);
+    glBindTexture(GL_TEXTURE_2D, handle);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+    if (data) {
+        GLenum format = GL_RED;
+        if (nrChannels == 3) format = GL_RGB;
+        else if (nrChannels == 4) format = GL_RGBA;
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else {
+        throw std::runtime_error("Failed to load texture: " + path);
+    }
+    stbi_image_free(data);
+    textures.push_back(handle);
+    return handle;
+}
+
+void Renderer::use_texture(glHandle handle, std::string name) {
+    static int index = 0;
+
+    glActiveTexture(GL_TEXTURE0 + index % 20);
+    index++;
+    glBindTexture(GL_TEXTURE_2D, handle);
+
+    shader->setInt(name, (index - 1) % 20);
 }

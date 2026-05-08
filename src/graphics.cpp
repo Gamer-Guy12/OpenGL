@@ -52,29 +52,35 @@ void render_thread() {
 	Renderer *renderer = new Renderer(window);
 	Shader *shader = new Shader(vertBuffer.str(), fragBuffer.str());
 
+	glHandle handle = renderer->load_texture(get_relative_path("/assets/baby.png"));
 	renderer->use_shader(shader);
+	renderer->use_texture(handle, "texture0");
 
 	auto start = std::chrono::steady_clock::now();
 	auto second_start = std::chrono::steady_clock::now();
 
 	vertices.push_back({
-		-0.1f, -0.5f, 0.0f,
-		1.0f, 0.0f, 0.0f
+		-0.7f, -0.7f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f
 	});
 
 	vertices.push_back({
-		0.1f, -0.5f, 0.0f,
-		0.0f, 1.0f, 0.0f
+		0.7f, -0.7f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		1.0f, 0.0f
 	});
 
 	vertices.push_back({
-		-0.1f, -0.25f, 0.0f,
-		0.0f, 0.0f, 1.0f
+		-0.7f, 0.7f, 0.0f,
+		0.0f, 0.0f, 1.0f,
+		0.0f, 1.0f
 	});
 
 	vertices.push_back({
-		0.1f, -0.25f, 0.0f,
-		1.0f, 1.0f, 1.0f
+		0.7f, 0.7f, 0.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f
 	});
 
 	indices.push_back(0);
@@ -97,31 +103,6 @@ void render_thread() {
 			second_start = std::chrono::steady_clock::now();
 			auto ms = std::chrono::duration_cast<std::chrono::microseconds>(diff);
 			std::cout << 1000000 / ms.count() << " fps\n";
-			count++;
-			if (count == 1) {
-				vertices.push_back({-0.05f, -0.25f, 0.0f,
-									1.0f, 0.0f, 0.0f});
-
-				vertices.push_back({0.05f, -0.25f, 0.0f,
-									0.0f, 1.0f, 0.0f});
-
-				vertices.push_back({-0.05f, 0.5f, 0.0f,
-									0.0f, 0.0f, 1.0f});
-
-				vertices.push_back({0.05f, 0.5f, 0.0f,
-									1.0f, 1.0f, 1.0f});
-				indices.push_back(4);
-				indices.push_back(5);
-				indices.push_back(6);
-
-				indices.push_back(5);
-				indices.push_back(7);
-				indices.push_back(6);
-
-				renderer->clear_data();
-				renderer->upload_vertices(vertices);
-				renderer->upload_indices(indices);
-			}
 		}
 		start = current;
 		renderer->draw();

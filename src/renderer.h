@@ -8,7 +8,10 @@
 struct Vertex {
 	float x, y, z;
 	float r, g, b;
+	float texX, texY;
 };
+
+typedef unsigned int glHandle;
 
 class Renderer {
 	public:
@@ -24,6 +27,9 @@ class Renderer {
 		void draw(void);
 		bool running(void);
 		void handle_life(void);
+
+		glHandle load_texture(std::string path);
+		void use_texture(glHandle texture, std::string name);
 
 	private:
 		friend void handle_resize(int event, void *data, void *param);
@@ -44,6 +50,7 @@ class Renderer {
 
 		std::vector<Vertex> vertices;
 		std::vector<unsigned int> indices;
+		std::vector<glHandle> textures;
 
 		Window *window;
 		Shader *shader = nullptr;
@@ -56,7 +63,7 @@ class Renderer {
 		float bg = 0.6f;
 		float bb = 0.8f;
 
-		unsigned int vao, vbo, ebo;
+		glHandle vao, vbo, ebo;
 		bool reload = false;
 };
 
