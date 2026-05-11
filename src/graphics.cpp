@@ -105,11 +105,25 @@ void render_thread() {
 			std::cout << 1000000 / ms.count() << " fps\n";
 		}
 		start = current;
+
+		renderer->start_render();
 		renderer->draw();
+		renderer->end_render();
+
 		renderer->handle_life();
 	}
 
 	delete renderer;
+}
+
+void key_handler(int event, void *data, void *param) {
+	if (event != WKDOWN) return;
+
+	Window *window = (Window *)data;
+
+	if (window->get_key() == VK_UP) {
+		std::cout << "Pressed Up!\n";
+	}
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
@@ -123,6 +137,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
 	window = new Window("My Window", 1280, 720);
 	window->show();
+	window->subscribe_events(key_handler, nullptr);
 
 	std::thread render(render_thread);
 

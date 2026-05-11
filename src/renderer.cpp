@@ -90,8 +90,7 @@ Renderer::Renderer(Window *window) : hWnd(window->get_hwnd()), hdc(window->get_h
     // Handle Swaps
     glSwapIntervalEXT(0);
 
-    resize_handler = window->subscribe_events(handle_resize, this);
-    close_handler = window->subscribe_events(handle_destroy, this);
+    event_handler = window->subscribe_events(handle_events, this);
 
     clear_data();
 
@@ -148,7 +147,7 @@ void Renderer::draw_triangles() {
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void *)0);
 }
 
-void Renderer::draw() {
+void Renderer::start_render() {
     if (state != 0) return;
 
     if (resize) {
@@ -161,11 +160,15 @@ void Renderer::draw() {
 
     glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(br, bg, bb, 1.0f);
+}
 
+void Renderer::draw() {
     if (indices.size() > 0 || reload) {
         draw_triangles();
     }
+}
 
+void Renderer::end_render() {
     SwapBuffers(hdc);
 }
 
@@ -177,29 +180,26 @@ bool Renderer::running() {
 void Renderer::handle_life() {
     if (state != 1) return;
 
-    window->unsubscribe_events(resize_handler);
-    window->unsubscribe_events(close_handler);
+    window->unsubscribe_events(event_handler);
     state = 2;
 }
 
-void handle_resize(int event, void *data, void *param) {
-    if (event != WRESIZE) return;
-
+void handle_events(int event, void *data, void *param) {
     Renderer *renderer = (Renderer *)param;
     Window *window = (Window *)data;
 
-    renderer->resize = true;
-    renderer->newWidth = window->get_width();
-    renderer->newHeight = window->get_height();
-}
-
-void handle_destroy(int event, void *data, void *param) {
-    if (event != WCLOSE) return;
-
-    Renderer *renderer = (Renderer *)param;
-    Window *window = (Window *)data;
-
-    renderer->state = 1;
+    switch (event) {
+        case WRESIZE:
+            renderer->resize = true;
+            renderer->newWidth = window->get_width();
+            renderer->newHeight = window->get_height();
+            break;
+        case WCLOSE:
+            renderer->state = 1;
+            break;
+        default:
+            break;
+    }
 }
 
 void Renderer::clear_data() {

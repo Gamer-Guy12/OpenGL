@@ -37,6 +37,14 @@ LRESULT WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 			return 0;
 		case WM_ERASEBKGND:
 			return 1;
+		case WM_KEYDOWN:
+			window->add_key(wParam);
+			window->dispatch_event(WKDOWN, window);
+			return 0;
+		case WM_KEYUP:
+			window->add_key(wParam);
+			window->dispatch_event(WKUP, window);
+			return 0;
 		default:
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -192,4 +200,16 @@ int Window::get_width(void) {
 
 int Window::get_height(void) {
 	return height;
+}
+
+uint64_t Window::get_key() {
+	if (keys.size() == 0) return -1;
+
+	uint64_t ret = keys[0];
+	keys.pop_front();
+	return ret;
+}
+
+void Window::add_key(uint64_t key) {
+	keys.push_back(key);
 }

@@ -25,6 +25,8 @@ class Renderer {
 		void set_background(float r, float g, float b);
 
 		void draw(void);
+		void start_render(void);
+		void end_render(void);
 		bool running(void);
 		void handle_life(void);
 
@@ -32,8 +34,7 @@ class Renderer {
 		void use_texture(glHandle texture, std::string name);
 
 	private:
-		friend void handle_resize(int event, void *data, void *param);
-		friend void handle_destroy(int event, void *data, void *param);
+		friend void handle_events(int event, void *data, void *param);
 
 		void draw_triangles(void);
 
@@ -45,8 +46,7 @@ class Renderer {
 		// 1 = Closing
 		// 2 = Dead
 		int state = 0;
-		int resize_handler;
-		int close_handler;
+		int event_handler;
 
 		std::vector<Vertex> vertices;
 		std::vector<unsigned int> indices;
